@@ -58,30 +58,20 @@
   <!-- Frosted glass overlay with a hole cut by clip-path -->
   <div class="frost-overlay" id="frost"></div>
 
-  <!-- Canvas for soft blended edge around reveal area -->
-  <canvas class="reveal-canvas" id="revealCanvas"></canvas>
+  <!-- Reveal rectangle outline -->
+  <div class="reveal-outline" id="revealOutline"></div>
 
   <script>
     const frost = document.getElementById('frost');
-    const canvas = document.getElementById('revealCanvas');
-    const ctx = canvas.getContext('2d');
+    const outline = document.getElementById('revealOutline');
 
-    // Reveal rectangle size — enlarged
     const RW = 560;
     const RH = 260;
-    const FEATHER = 48; // soft edge width
 
     let mouseX = window.innerWidth / 2;
     let mouseY = window.innerHeight / 2;
     let currentX = mouseX;
     let currentY = mouseY;
-
-    function resizeCanvas() {
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-    resizeCanvas();
-    window.addEventListener('resize', resizeCanvas);
 
     document.addEventListener('mousemove', e => {
       mouseX = e.clientX;
@@ -89,58 +79,19 @@
     });
 
     function updateFrost(x, y) {
-      const hw = RW / 2;
-      const hh = RH / 2;
-      const l = x - hw;
-      const r = x + hw;
-      const t = y - hh;
-      const b = y + hh;
+      const hw = RW / 2, hh = RH / 2;
+      const l = x - hw, r = x + hw, t = y - hh, b = y + hh;
 
-      // Punch hole in frost overlay
       frost.style.clipPath = `polygon(
         evenodd,
         0px 0px, 100% 0px, 100% 100%, 0px 100%, 0px 0px,
         ${l}px ${t}px, ${l}px ${b}px, ${r}px ${b}px, ${r}px ${t}px, ${l}px ${t}px
       )`;
 
-      // Draw soft feathered edge on canvas
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // Horizontal gradient (left edge)
-      const gradL = ctx.createLinearGradient(l - FEATHER, 0, l + FEATHER, 0);
-      gradL.addColorStop(0, 'rgba(0,0,0,0)');
-      gradL.addColorStop(1, 'rgba(0,0,0,0.55)');
-
-      // Horizontal gradient (right edge)
-      const gradR = ctx.createLinearGradient(r - FEATHER, 0, r + FEATHER, 0);
-      gradR.addColorStop(0, 'rgba(0,0,0,0.55)');
-      gradR.addColorStop(1, 'rgba(0,0,0,0)');
-
-      // Vertical gradient (top edge)
-      const gradT = ctx.createLinearGradient(0, t - FEATHER, 0, t + FEATHER);
-      gradT.addColorStop(0, 'rgba(0,0,0,0)');
-      gradT.addColorStop(1, 'rgba(0,0,0,0.55)');
-
-      // Vertical gradient (bottom edge)
-      const gradB = ctx.createLinearGradient(0, b - FEATHER, 0, b + FEATHER);
-      gradB.addColorStop(0, 'rgba(0,0,0,0.55)');
-      gradB.addColorStop(1, 'rgba(0,0,0,0)');
-
-      // Left feather strip
-      ctx.fillStyle = gradL;
-      ctx.fillRect(l - FEATHER, t - FEATHER, FEATHER * 2, RH + FEATHER * 2);
-
-      // Right feather strip
-      ctx.fillStyle = gradR;
-      ctx.fillRect(r - FEATHER, t - FEATHER, FEATHER * 2, RH + FEATHER * 2);
-
-      // Top feather strip
-      ctx.fillStyle = gradT;
-      ctx.fillRect(l + FEATHER, t - FEATHER, RW - FEATHER * 2, FEATHER * 2);
-
-      // Bottom feather strip
-      ctx.fillStyle = gradB;
-      ctx.fillRect(l + FEATHER, b - FEATHER, RW - FEATHER * 2, FEATHER * 2);
+      outline.style.left   = l + 'px';
+      outline.style.top    = t + 'px';
+      outline.style.width  = RW + 'px';
+      outline.style.height = RH + 'px';
     }
 
     function animate() {

@@ -57,7 +57,14 @@ html, body {
 .bottom-left  { bottom: 0; left: 0; align-items: flex-start; }
 .bottom-right { bottom: 0; right: 0; align-items: flex-end; text-align: right; }
 
-/* ── Frosted overlay ── */
+/* ── Reveal rectangle outline ── */
+.reveal-outline {
+  position: fixed;
+  z-index: 12;
+  pointer-events: none;
+  border: 1px solid #a8d8f0;
+  opacity: 0.5;
+}
 .frost-overlay {
   position: fixed;
   inset: 0;
@@ -68,10 +75,4 @@ html, body {
   pointer-events: none;
 }
 
-/* ── Canvas for soft feathered reveal edge ── */
-.reveal-canvas {
-  position: fixed;
-  inset: 0;
-  z-index: 11;
-  pointer-events: none;
-}
+
