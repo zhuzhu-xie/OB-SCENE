@@ -56,24 +56,33 @@
     }
 
     function sliceTiles(a) {
-      a.tiles = [];
-      a.flat  = [];
+      a.tiles     = [];
+      a.greyTiles = [];
+      a.flat      = [];
       for (let c = 0; c < COLS; c++) {
-        a.tiles[c] = [];
+        a.tiles[c]     = [];
+        a.greyTiles[c] = [];
         for (let r = 0; r < ROWS; r++) {
+          const sx = (c / COLS) * a.img.naturalWidth;
+          const sy = (r / ROWS) * a.img.naturalHeight;
+          const sw = a.img.naturalWidth  / COLS;
+          const sh = a.img.naturalHeight / ROWS;
+
+          // colour tile
           const oc = document.createElement('canvas');
-          oc.width  = cellW;
-          oc.height = cellH;
-          const oc2 = oc.getContext('2d');
-          oc2.drawImage(
-            a.img,
-            (c / COLS) * a.img.naturalWidth,
-            (r / ROWS) * a.img.naturalHeight,
-            a.img.naturalWidth  / COLS,
-            a.img.naturalHeight / ROWS,
-            0, 0, cellW, cellH
-          );
+          oc.width = cellW; oc.height = cellH;
+          const octx = oc.getContext('2d');
+          octx.drawImage(a.img, sx, sy, sw, sh, 0, 0, cellW, cellH);
           a.tiles[c][r] = oc;
+
+          // greyscale tile — same draw then desaturate via filter
+          const og = document.createElement('canvas');
+          og.width = cellW; og.height = cellH;
+          const ogtx = og.getContext('2d');
+          ogtx.filter = 'grayscale(100%) blur(3px)';
+          ogtx.drawImage(a.img, sx, sy, sw, sh, 0, 0, cellW, cellH);
+          a.greyTiles[c][r] = og;
+
           a.flat.push([c, r]);
         }
       }
@@ -143,13 +152,13 @@
             const inside = cx >= rl && cx <= rr && cy >= rt && cy <= rb;
 
             if (inside) {
-              // clear reveal — draw real tile
+              // revealed — colour
               ctx.drawImage(a.tiles[c][r], sx, sy, cellW, cellH);
             } else {
-              // shuffled tile
+              // shuffled — greyscale
               if (hiddenIdx < a.flat.length) {
                 const [sc, sr] = a.flat[hiddenIdx++];
-                ctx.drawImage(a.tiles[sc][sr], sx, sy, cellW, cellH);
+                ctx.drawImage(a.greyTiles[sc][sr], sx, sy, cellW, cellH);
               }
             }
           }
