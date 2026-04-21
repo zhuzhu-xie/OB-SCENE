@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OB-SCENE — Works</title>
+  <link rel="stylesheet" href="artworks.css" />
+</head>
+<body>
+
+  <nav class="site-nav">
+    <a href="index.html">Press Release</a>
+    <a href="artworks.html">Works</a>
+  </nav>
+
+  <canvas id="mainCanvas"></canvas>
+
+  <script>
+    const canvas = document.getElementById('mainCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const COLS = 40;
+    const ROWS = 24;
+    const RW = 560, RH = 300;
+    const SHUFFLE_MS = 60;
+
+    const SRCS = [
+      'materials/blas-03-3-facialweaponizationcommunique-2012.jpg',
+      'materials/Steyerl---how-not-to-be-seen---chroma-key-invisibility.jpg',
+      'materials/blas-03-3-facialweaponizationcommunique-2012.jpg',
+      'materials/Steyerl---how-not-to-be-seen---chroma-key-invisibility.jpg',
+      'materials/blas-03-3-facialweaponizationcommunique-2012.jpg',
+    ];
+
+    let W, H, cellW, cellH;
+    let mouseX = 0, mouseY = 0;
+    let curX = 0, curY = 0;
+    let scrollY = 0, targetScroll = 0;
+    let lastShuffle = 0;
+
+    // artwork state per image
+    const art = SRCS.map(src => ({ src, img: null, tiles: [], flat: [], ready: false }));
+
+    let loaded = 0;
+    art.forEach((a, i) => {
+      const img = new Image();
+      img.onload = () => { a.img = img; if (++loaded === art.length) init(); };
+      img.src = a.src;
+    });
+
+    function resize() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+      cellW = Math.ceil(W / COLS);
+      cellH = Math.ceil(H / ROWS);
+    }
+
+    function sliceTiles(a) {
+      a.tiles = [];
+      a.flat  = [];
+      for (let c = 0; c < COLS; c++) {
+        a.tiles[c] = [];
+        for (let r = 0; r < ROWS; r++) {
+          const oc = document.createElement('canvas');
+          oc.width  = cellW;
+          oc.height = cellH;
+          const oc2 = oc.getContext('2d');
+          oc2.drawImage(
+            a.img,
+            (c / COLS) * a.img.naturalWidth,
+            (r / ROWS) * a.img.naturalHeight,
+            a.img.naturalWidth  / COLS,
+            a.img.naturalHeight / ROWS,
+            0, 0, cellW, cellH
+          );
+          a.tiles[c][r] = oc;
+          a.flat.push([c, r]);
+        }
+      }
+      a.ready = true;
+    }
+
+    function shuffleArt(a, rl, rr, rt, rb, imgTop) {
+      // collect non-revealed tile indices
+      const hidden = [];
+      for (let c = 0; c < COLS; c++) {
+        for (let r = 0; r < ROWS; r++) {
+          const sx = c * cellW + cellW / 2;
+          const sy = imgTop + r * cellH + cellH / 2;
+          const inside = sx >= rl && sx <= rr && sy >= rt && sy <= rb;
+          if (!inside) hidden.push([c, r]);
+        }
+      }
+      // Fisher-Yates shuffle
+      for (let i = hidden.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [hidden[i], hidden[j]] = [hidden[j], hidden[i]];
+      }
+      a.flat = hidden;
+    }
+
+    function init() {
+      resize();
+      art.forEach(a => sliceTiles(a));
+      window.addEventListener('resize', () => { resize(); art.forEach(a => sliceTiles(a)); });
+      requestAnimationFrame(loop);
+    }
+
+    document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
+    document.addEventListener('wheel', e => {
+      targetScroll = Math.max(0, targetScroll + e.deltaY);
+    });
+
+    function loop(ts) {
+      curX += (mouseX - curX) * 0.1;
+      curY += (mouseY - curY) * 0.1;
+      scrollY += (targetScroll - scrollY) * 0.08;
+
+      ctx.fillStyle = '#0e0e0e';
+      ctx.fillRect(0, 0, W, H);
+
+      const rl = curX - RW / 2, rr = curX + RW / 2;
+      const rt = curY - RH / 2, rb = curY + RH / 2;
+
+      const doShuffle = ts - lastShuffle > SHUFFLE_MS;
+      if (doShuffle) lastShuffle = ts;
+
+      art.forEach((a, i) => {
+        if (!a.ready) return;
+        const imgTop = i * H - scrollY;
+        if (imgTop > H || imgTop + H < 0) return;
+
+        if (doShuffle) shuffleArt(a, rl, rr, rt, rb, imgTop);
+
+        // draw shuffled hidden tiles
+        let hiddenIdx = 0;
+        for (let c = 0; c < COLS; c++) {
+          for (let r = 0; r < ROWS; r++) {
+            const sx = c * cellW;
+            const sy = imgTop + r * cellH;
+            const cx = sx + cellW / 2;
+            const cy = sy + cellH / 2;
+            const inside = cx >= rl && cx <= rr && cy >= rt && cy <= rb;
+
+            if (inside) {
+              // clear reveal — draw real tile
+              ctx.drawImage(a.tiles[c][r], sx, sy, cellW, cellH);
+            } else {
+              // shuffled tile
+              if (hiddenIdx < a.flat.length) {
+                const [sc, sr] = a.flat[hiddenIdx++];
+                ctx.drawImage(a.tiles[sc][sr], sx, sy, cellW, cellH);
+              }
+            }
+          }
+        }
+      });
+
+      requestAnimationFrame(loop);
+    }
+  </script>
+
+</body>
+</html>
