@@ -26,82 +26,84 @@
     <span>Link To Be Released</span>
   </div>
 
-  <div class="page-text">
-
-    <p>OB-SCENE (遮蔽之景) is an online exhibition that starts from a pretty simple question: does seeing everything actually help us understand anything better?</p>
-
-    <p>Instead of giving you full access to artworks straight away, the exhibition limits what you can see. When you open the site, only a narrow horizontal strip of the screen is visible. Everything else is black. You move through the work by dragging left and right, zooming in and out, and slowly piecing things together from fragments. There's no full image, no quick overview, no "complete" view waiting at the end.</p>
-
-    <p>It's a bit uncomfortable on purpose.</p>
-
-    <p>The project plays with the idea that visibility isn't neutral, that how much we can see (and how easily) shapes what we think we know. Online, we're used to everything being immediate and frictionless. You scroll, you skim, you move on. Here, that's not really possible. You have to slow down, spend time, and sit with not fully knowing what you're looking at.</p>
-
-    <p>At the same time, it's not trying to prove that "less is more" or that restriction magically creates deeper meaning. It's more of an open question. What happens when you don't get the whole picture? Do you pay more attention? Do you make things up? Do you get frustrated and leave? All of those responses are part of the work.</p>
-
-    <p>The exhibition exists entirely online — your browser is the space. There's no physical venue, no fixed path, and no clear sense of how much there is to see or how far through you are. You just move through it, building your own version of what's there from whatever you manage to catch.</p>
-
-    <p>Opening: 26 April (online, link to be released)</p>
-
-    <p>OB-SCENE isn't a one-off show. It's set up as an ongoing, long-term project that will keep growing over time. We're inviting artists and contributors to submit work that responds to the ideas behind the exhibition — or pushes against them. There's no single "correct" way to fit into it.</p>
-
-    <p>If you're interested in being part of it, we're open to submissions across formats and approaches. The project is meant to stay a bit unstable, a bit unfinished, and shaped by whoever comes into it.</p>
-
-    <p>More info + submission details coming soon.</p>
-
-    <div class="meta">
-      OB-SCENE (遮蔽之景)<br>
-      Online interactive exhibition<br>
-      Launching 26 April
-    </div>
+  <!-- Blurred dim layer (always visible, unrevealed state) -->
+  <div id="scroll-blur" class="text-layer blurred">
+    <div class="text-column" id="col-blur"></div>
   </div>
 
-  <!-- Frosted glass overlay with a hole cut by clip-path -->
-  <div class="frost-overlay" id="frost"></div>
+  <!-- Sharp bright layer (clipped to reveal window) -->
+  <div id="scroll-sharp" class="text-layer sharp">
+    <div class="text-column" id="col-sharp"></div>
+  </div>
 
-  <!-- Reveal rectangle outline -->
-  <div class="reveal-outline" id="revealOutline"></div>
+  <!-- Reveal border overlay -->
+  <div id="reveal-box"></div>
 
   <script>
-    const frost = document.getElementById('frost');
-    const outline = document.getElementById('revealOutline');
+    const PARAGRAPHS = [
+      "OB-SCENE (遮蔽之景) is an online exhibition that starts from a pretty simple question: does seeing everything actually help us understand anything better?",
+      "Instead of giving you full access to artworks straight away, the exhibition limits what you can see. When you open the site, only a narrow horizontal strip of the screen is visible. Everything else is black. You move through the work by dragging left and right, zooming in and out, and slowly piecing things together from fragments. There's no full image, no quick overview, no \"complete\" view waiting at the end.",
+      "It's a bit uncomfortable on purpose.",
+      "The project plays with the idea that visibility isn't neutral, that how much we can see (and how easily) shapes what we think we know. Online, we're used to everything being immediate and frictionless. You scroll, you skim, you move on. Here, that's not really possible. You have to slow down, spend time, and sit with not fully knowing what you're looking at.",
+      "At the same time, it's not trying to prove that \"less is more\" or that restriction magically creates deeper meaning. It's more of an open question. What happens when you don't get the whole picture? Do you pay more attention? Do you make things up? Do you get frustrated and leave? All of those responses are part of the work.",
+      "The exhibition exists entirely online — your browser is the space. There's no physical venue, no fixed path, and no clear sense of how much there is to see or how far through you are. You just move through it, building your own version of what's there from whatever you manage to catch.",
+      "Opening: 26 April (online, link to be released)",
+      "OB-SCENE isn't a one-off show. It's set up as an ongoing, long-term project that will keep growing over time. We're inviting artists and contributors to submit work that responds to the ideas behind the exhibition — or pushes against them. There's no single \"correct\" way to fit into it.",
+      "If you're interested in being part of it, we're open to submissions across formats and approaches. The project is meant to stay a bit unstable, a bit unfinished, and shaped by whoever comes into it.",
+      "More info + submission details coming soon."
+    ];
 
-    const RW = 560;
-    const RH = 260;
+    // Populate both columns with identical content
+    [document.getElementById('col-blur'), document.getElementById('col-sharp')].forEach(col => {
+      PARAGRAPHS.forEach(text => {
+        const p = document.createElement('p');
+        p.textContent = text;
+        col.appendChild(p);
+      });
+    });
 
+    const scrollBlur  = document.getElementById('scroll-blur');
+    const scrollSharp = document.getElementById('scroll-sharp');
+    const revealBox   = document.getElementById('reveal-box');
+
+    const RW = window.innerWidth * 0.36;
+    const RH = window.innerHeight * 0.36;
     let mouseX = window.innerWidth / 2;
     let mouseY = window.innerHeight / 2;
-    let currentX = mouseX;
-    let currentY = mouseY;
+    let curX = mouseX, curY = mouseY;
 
     document.addEventListener('mousemove', e => {
       mouseX = e.clientX;
       mouseY = e.clientY;
     });
 
-    function updateFrost(x, y) {
-      const hw = RW / 2, hh = RH / 2;
-      const l = x - hw, r = x + hw, t = y - hh, b = y + hh;
+    // Sync scroll between both layers
+    scrollBlur.addEventListener('wheel', e => {
+      scrollBlur.scrollTop  += e.deltaY;
+      scrollSharp.scrollTop  = scrollBlur.scrollTop;
+      e.preventDefault();
+    }, { passive: false });
 
-      frost.style.clipPath = `polygon(
-        evenodd,
-        0px 0px, 100% 0px, 100% 100%, 0px 100%, 0px 0px,
-        ${l}px ${t}px, ${l}px ${b}px, ${r}px ${b}px, ${r}px ${t}px, ${l}px ${t}px
-      )`;
+    function loop() {
+      curX += (mouseX - curX) * 0.1;
+      curY += (mouseY - curY) * 0.1;
 
-      outline.style.left   = l + 'px';
-      outline.style.top    = t + 'px';
-      outline.style.width  = RW + 'px';
-      outline.style.height = RH + 'px';
+      const x = Math.round(curX - RW / 2);
+      const y = Math.round(curY - RH / 2);
+
+      // Clip the sharp layer to the reveal rectangle
+      scrollSharp.style.clipPath =
+        `inset(${y}px ${window.innerWidth - x - RW}px ${window.innerHeight - y - RH}px ${x}px)`;
+
+      // Position the reveal border box
+      revealBox.style.left   = x + 'px';
+      revealBox.style.top    = y + 'px';
+      revealBox.style.width  = RW + 'px';
+      revealBox.style.height = RH + 'px';
+
+      requestAnimationFrame(loop);
     }
-
-    function animate() {
-      currentX += (mouseX - currentX) * 0.12;
-      currentY += (mouseY - currentY) * 0.12;
-      updateFrost(currentX, currentY);
-      requestAnimationFrame(animate);
-    }
-
-    animate();
+    loop();
   </script>
 
 </body>

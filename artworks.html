@@ -8,12 +8,26 @@
 </head>
 <body>
 
-  <nav class="site-nav">
-    <a href="index.html">Press Release</a>
-    <a href="artworks.html">Works</a>
-  </nav>
+  <div class="corner top-left">
+    <span>OB-SCENE</span>
+    <span>遮蔽之景</span>
+  </div>
+  <div class="corner top-right">
+    <span>Online Exhibition</span>
+    <span>Launching 26 April</span>
+  </div>
+  <div class="corner bottom-left">
+    <span>Open Submissions</span>
+    <span>All Formats Welcome</span>
+  </div>
+  <div class="corner bottom-right">
+    <span>Ongoing Project</span>
+    <span>Link To Be Released</span>
+  </div>
 
-  <canvas id="mainCanvas"></canvas>
+  <div class="stage">
+    <canvas id="mainCanvas"></canvas>
+  </div>
 
   <script>
     const canvas = document.getElementById('mainCanvas');
@@ -21,8 +35,11 @@
 
     const COLS = 40;
     const ROWS = 24;
-    const RW = 560, RH = 300;
     const SHUFFLE_MS = 60;
+
+    // reveal window size — kept proportional to canvas
+    const REVEAL_RATIO_W = 0.45;
+    const REVEAL_RATIO_H = 0.45;
 
     const SRCS = [
       'materials/blas-03-3-facialweaponizationcommunique-2012.jpg',
@@ -32,27 +49,29 @@
       'materials/blas-03-3-facialweaponizationcommunique-2012.jpg',
     ];
 
-    let W, H, cellW, cellH;
+    let W, H, cellW, cellH, RW, RH;
     let mouseX = 0, mouseY = 0;
     let curX = 0, curY = 0;
     let scrollY = 0, targetScroll = 0;
     let lastShuffle = 0;
 
-    // artwork state per image
     const art = SRCS.map(src => ({ src, img: null, tiles: [], flat: [], ready: false }));
 
     let loaded = 0;
-    art.forEach((a, i) => {
+    art.forEach((a) => {
       const img = new Image();
       img.onload = () => { a.img = img; if (++loaded === art.length) init(); };
       img.src = a.src;
     });
 
     function resize() {
-      W = canvas.width  = window.innerWidth;
-      H = canvas.height = window.innerHeight;
+      const stage = canvas.parentElement;
+      W = canvas.width  = stage.clientWidth;
+      H = canvas.height = stage.clientHeight;
       cellW = Math.ceil(W / COLS);
       cellH = Math.ceil(H / ROWS);
+      RW = W * REVEAL_RATIO_W;
+      RH = H * REVEAL_RATIO_H;
     }
 
     function sliceTiles(a) {
@@ -68,14 +87,12 @@
           const sw = a.img.naturalWidth  / COLS;
           const sh = a.img.naturalHeight / ROWS;
 
-          // colour tile
           const oc = document.createElement('canvas');
           oc.width = cellW; oc.height = cellH;
           const octx = oc.getContext('2d');
           octx.drawImage(a.img, sx, sy, sw, sh, 0, 0, cellW, cellH);
           a.tiles[c][r] = oc;
 
-          // greyscale tile — same draw then desaturate via filter
           const og = document.createElement('canvas');
           og.width = cellW; og.height = cellH;
           const ogtx = og.getContext('2d');
@@ -90,7 +107,6 @@
     }
 
     function shuffleArt(a, rl, rr, rt, rb, imgTop) {
-      // collect non-revealed tile indices
       const hidden = [];
       for (let c = 0; c < COLS; c++) {
         for (let r = 0; r < ROWS; r++) {
@@ -100,7 +116,6 @@
           if (!inside) hidden.push([c, r]);
         }
       }
-      // Fisher-Yates shuffle
       for (let i = hidden.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [hidden[i], hidden[j]] = [hidden[j], hidden[i]];
@@ -115,8 +130,14 @@
       requestAnimationFrame(loop);
     }
 
-    document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
-    document.addEventListener('wheel', e => {
+    // mouse coords relative to canvas
+    canvas.addEventListener('mousemove', e => {
+      const rect = canvas.getBoundingClientRect();
+      mouseX = e.clientX - rect.left;
+      mouseY = e.clientY - rect.top;
+    });
+
+    canvas.addEventListener('wheel', e => {
       targetScroll = Math.max(0, targetScroll + e.deltaY);
     });
 
@@ -141,7 +162,6 @@
 
         if (doShuffle) shuffleArt(a, rl, rr, rt, rb, imgTop);
 
-        // draw shuffled hidden tiles
         let hiddenIdx = 0;
         for (let c = 0; c < COLS; c++) {
           for (let r = 0; r < ROWS; r++) {
@@ -152,10 +172,8 @@
             const inside = cx >= rl && cx <= rr && cy >= rt && cy <= rb;
 
             if (inside) {
-              // revealed — colour
               ctx.drawImage(a.tiles[c][r], sx, sy, cellW, cellH);
             } else {
-              // shuffled — greyscale
               if (hiddenIdx < a.flat.length) {
                 const [sc, sr] = a.flat[hiddenIdx++];
                 ctx.drawImage(a.greyTiles[sc][sr], sx, sy, cellW, cellH);
