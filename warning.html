@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OB-SCENE — Content Warning</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      width: 100%;
+      min-height: 100vh;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', monospace;
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    .warning-container {
+      max-width: 520px;
+      padding: 0 24px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .warning-title {
+      font-size: 10px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: #a8d8f0;
+      line-height: 1.6;
+    }
+
+    .warning-text {
+      font-size: 12px;
+      line-height: 2;
+      letter-spacing: 0.02em;
+      color: rgba(255, 255, 255, 0.55);
+    }
+
+    .warning-actions {
+      display: flex;
+      gap: 32px;
+      margin-top: 12px;
+    }
+
+    .warning-actions a {
+      font-family: 'Courier New', monospace;
+      font-size: 10px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      text-decoration: none;
+      padding: 12px 28px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+
+    .btn-enter {
+      color: #a8d8f0;
+      border: 1px solid rgba(168, 216, 240, 0.3);
+    }
+    .btn-enter:hover {
+      color: #fff;
+      border-color: rgba(255, 255, 255, 0.4);
+    }
+
+    .btn-leave {
+      color: rgba(255, 255, 255, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .btn-leave:hover {
+      color: rgba(255, 255, 255, 0.5);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="warning-container">
+    <div class="warning-title">Content Warning</div>
+
+    <p class="warning-text">
+      This exhibition contains imagery that includes nudity, depictions of the human body,
+      and themes that some viewers may find confronting or uncomfortable. The works engage
+      with questions around visibility, surveillance, and bodily autonomy, and may reference
+      violence, vulnerability, or physical transformation.
+    </p>
+
+    <p class="warning-text">
+      Viewer discretion is advised. By continuing, you acknowledge that you are comfortable
+      engaging with this content.
+    </p>
+
+    <div class="warning-actions">
+      <a href="artworks.html" class="btn-enter">Enter</a>
+      <a href="https://www.google.com" class="btn-leave">Leave</a>
+    </div>
+  </div>
+
+</body>
+</html>
