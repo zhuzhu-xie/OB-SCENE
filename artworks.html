@@ -42,11 +42,12 @@
     const REVEAL_RATIO_H = 0.45;
 
     const SRCS = [
-      'materials/blas-03-3-facialweaponizationcommunique-2012.jpg',
-      'materials/Steyerl---how-not-to-be-seen---chroma-key-invisibility.jpg',
-      'materials/blas-03-3-facialweaponizationcommunique-2012.jpg',
-      'materials/Steyerl---how-not-to-be-seen---chroma-key-invisibility.jpg',
-      'materials/blas-03-3-facialweaponizationcommunique-2012.jpg',
+      'materials/Hito_Steyerl.jpg',
+      'materials/Niklas_Roy.jpg',
+      'materials/Stelarc.jpg',
+      'materials/Trevor_Paglen.jpg',
+      'materials/Xu_bing.jpg',
+      'materials/Zach_Blas.jpg',
     ];
 
     let W, H, cellW, cellH, RW, RH;
@@ -54,6 +55,12 @@
     let curX = 0, curY = 0;
     let scrollY = 0, targetScroll = 0;
     let lastShuffle = 0;
+
+    // shuffle SRCS order on each load
+    for (let i = SRCS.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [SRCS[i], SRCS[j]] = [SRCS[j], SRCS[i]];
+    }
 
     const art = SRCS.map(src => ({ src, img: null, tiles: [], flat: [], ready: false }));
 
@@ -138,7 +145,8 @@
     });
 
     canvas.addEventListener('wheel', e => {
-      targetScroll = Math.max(0, targetScroll + e.deltaY);
+      const maxScroll = (SRCS.length - 1) * H;
+      targetScroll = Math.max(0, Math.min(maxScroll, targetScroll + e.deltaY));
     });
 
     function loop(ts) {
