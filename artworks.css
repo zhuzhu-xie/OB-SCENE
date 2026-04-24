@@ -23,7 +23,7 @@ html, body {
   display: block;
   width: 100%;
   height: 100%;
-  cursor: none;
+  cursor: pointer;
 }
 
 /* ── Corner info labels ── */

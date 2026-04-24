@@ -151,6 +151,39 @@
       targetScroll = Math.max(0, Math.min(maxScroll, targetScroll + e.deltaY));
     });
 
+    // Map image sources to detail pages and artist names
+    const ART_INFO = {
+      'materials/Hito_Steyerl.jpg':  { label: 'Hito Steyerl', page: 'hito.html' },
+      'materials/Niklas_Roy.jpg':     { label: 'Niklas Roy', page: 'niklas.html' },
+      'materials/Stelarc.jpg':        { label: 'Stelarc', page: 'stelarc.html' },
+      'materials/Trevor_Paglen.jpg':  { label: 'Trevor Paglen', page: 'trevor.html' },
+      'materials/Xu_bing.jpg':        { label: 'Xu Bing', page: 'xubing.html' },
+      'materials/Zach_Blas.jpg':      { label: 'Zach Blas', page: 'zachblas.html' },
+      'materials/zhuzhu.jpg':         { label: 'Zhuzhu Xie', page: 'zhuzhu.html' },
+      'materials/fio.jpg':            { label: 'Fioretta Zhang', page: 'fio.html' },
+    };
+
+    // Click: navigate to detail page with crop info
+    canvas.addEventListener('click', () => {
+      for (let i = 0; i < art.length; i++) {
+        const imgTop = i * H - scrollY;
+        if (curY >= imgTop && curY < imgTop + H) {
+          const info = ART_INFO[art[i].src];
+          if (info && info.page) {
+            // Calculate crop as percentage of the image
+            const relY = curY - imgTop; // cursor Y relative to this image's top
+            const cropL = Math.max(0, (curX - RW / 2) / W);
+            const cropT = Math.max(0, (relY - RH / 2) / H);
+            const cropR = Math.min(1, (curX + RW / 2) / W);
+            const cropB = Math.min(1, (relY + RH / 2) / H);
+            const params = `?cl=${cropL.toFixed(3)}&ct=${cropT.toFixed(3)}&cr=${cropR.toFixed(3)}&cb=${cropB.toFixed(3)}`;
+            window.location.href = info.page + params;
+          }
+          return;
+        }
+      }
+    });
+
     function loop(ts) {
       curX += (mouseX - curX) * 0.1;
       curY += (mouseY - curY) * 0.1;
@@ -190,6 +223,22 @@
               }
             }
           }
+        }
+
+        // Draw artist label at bottom of this image section
+        const info = ART_INFO[a.src];
+        if (info) {
+          const labelY = imgTop + H - 24;
+          const labelX = 20;
+          // Only show label clearly inside reveal window
+          const labelInReveal = labelX >= rl && labelX + 200 <= rr && labelY >= rt && labelY <= rb;
+          ctx.font = '10px "Courier New", monospace';
+          ctx.letterSpacing = '2px';
+          ctx.fillStyle = labelInReveal
+            ? '#a8d8f0'
+            : 'rgba(168, 216, 240, 0.12)';
+          ctx.fillText(info.label.toUpperCase(), labelX, labelY);
+          ctx.letterSpacing = '0px';
         }
       });
 
