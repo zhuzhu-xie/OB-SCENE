@@ -42,7 +42,7 @@ html, body {
   font-size: 10px;
   letter-spacing: 0.24em;
   text-transform: uppercase;
-  color: #a8d8f0;
+  color: #c0e8ff;
   white-space: nowrap;
   line-height: 1.6;
 }
@@ -51,3 +51,23 @@ html, body {
 .top-right    { top: 0; right: 0; align-items: flex-end; text-align: right; }
 .bottom-left  { bottom: 0; left: 0; align-items: flex-start; }
 .bottom-right { bottom: 0; right: 0; align-items: flex-end; text-align: right; }
+
+/* ── Home logo link ── */
+.home-logo {
+  position: fixed;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 25;
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+
+.home-logo:hover {
+  opacity: 1;
+}
+
+.home-logo img {
+  width: 80px;
+  display: block;
+}

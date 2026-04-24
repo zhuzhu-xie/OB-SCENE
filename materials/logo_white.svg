@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="_图层_2" data-name="图层_2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 325.26 88.66">
+  <defs>
+    <style>
+      .cls-1 {
+        stroke-width: 5px;
+      }
+
+      .cls-1, .cls-2 {
+        fill: none;
+        stroke: #fff;
+        stroke-miterlimit: 10;
+      }
+
+      .cls-2 {
+        stroke-width: 4px;
+      }
+
+      .cls-3 {
+        letter-spacing: 0em;
+      }
+
+      .cls-3, .cls-4, .cls-5, .cls-6 {
+        font-family: TurbineTrial-Light, 'Turbine Trial';
+      }
+
+      .cls-7 {
+        fill: #fff;
+        font-size: 78.19px;
+        font-weight: 300;
+      }
+
+      .cls-5 {
+        letter-spacing: 0em;
+      }
+
+      .cls-6 {
+        letter-spacing: -.02em;
+      }
+
+      .cls-8 {
+        font-family: AdobeSongStd-Light-GBpc-EUC-H, 'Adobe Song Std';
+      }
+    </style>
+  </defs>
+  <g id="_图层_3" data-name="图层_3">
+    <g>
+      <text class="cls-7" transform="translate(0 68.81)"><tspan class="cls-4" x="0" y="0">ob</tspan><tspan class="cls-8" x="91.32" y="0">-</tspan><tspan class="cls-5" x="120.64" y="0">s</tspan><tspan class="cls-6" x="158.72" y="0">c</tspan><tspan class="cls-3" x="195.47" y="0">ene</tspan></text>
+      <line class="cls-2" x1="260.69" y1="60.23" x2="260.69" y2="46.24"/>
+      <line class="cls-1" x1="22.55" y1="53.23" x2="22.55" y2="47.7"/>
+    </g>
+  </g>
+</svg>
