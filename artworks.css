@@ -1,3 +1,10 @@
+@font-face {
+  font-family: 'Turbine Trial';
+  src: url('fonts/TurbineTrial-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
@@ -38,7 +45,7 @@ html, body {
 }
 
 .corner span {
-  font-family: 'Courier New', monospace;
+  font-family: 'Turbine Trial', 'Courier New', monospace;
   font-size: 10px;
   letter-spacing: 0.24em;
   text-transform: uppercase;
@@ -70,4 +77,12 @@ html, body {
 .home-logo img {
   width: 80px;
   display: block;
+}
+
+/* ── Decorative ruler ── */
+.deco {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
 }

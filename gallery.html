@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OB-SCENE — Gallery</title>
+  <style>
+    @font-face {
+      font-family: 'Turbine Trial';
+      src: url('fonts/TurbineTrial-Regular.otf') format('opentype');
+      font-weight: normal;
+      font-style: normal;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #000;
+      overflow: hidden;
+      font-family: 'Turbine Trial', 'Courier New', monospace;
+    }
+
+    /* ── Stack view ── */
+    #stackView {
+      width: 100%;
+      height: 100%;
+      perspective: 900px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .stack-wrapper {
+      position: relative;
+      transform-style: preserve-3d;
+      transform: rotateX(-20deg) rotateY(-40deg);
+      width: 220px;
+      height: 150px;
+      margin-right: 300px;
+    }
+
+    .card {
+      position: absolute;
+      width: 220px;
+      height: 150px;
+      overflow: hidden;
+      border-radius: 1px;
+      box-shadow: 2px 2px 6px rgba(0,0,0,0.7);
+      transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      cursor: pointer;
+    }
+
+    .card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      pointer-events: none;
+    }
+
+    /* ── Reveal view (same layout as artworks.html) ── */
+    #revealView {
+      display: none;
+      width: 100%;
+      height: 100%;
+      background: #000;
+      cursor: none;
+    }
+
+    #revealView.active { display: block; }
+
+    .stage {
+      width: 80vw;
+      height: 80vh;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #0e0e0e;
+      overflow: hidden;
+    }
+
+    #revealCanvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: none;
+    }
+
+    /* ── Corner labels ── */
+    .corner {
+      position: fixed;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+      padding: 28px 32px;
+    }
+
+    .corner span {
+      font-family: 'Turbine Trial', 'Courier New', monospace;
+      font-size: 10px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: #c0e8ff;
+      white-space: nowrap;
+      line-height: 1.6;
+    }
+
+    .top-left    { top: 0; left: 0; align-items: flex-start; }
+    .top-right   { top: 0; right: 0; align-items: flex-end; text-align: right; }
+    .bottom-left { bottom: 0; left: 0; align-items: flex-start; }
+    .bottom-right{ bottom: 0; right: 0; align-items: flex-end; text-align: right; }
+
+    /* ── Decorative ruler ── */
+    .deco {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── Home logo ── */
+    .home-logo {
+      position: fixed;
+      top: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 25;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+      display: block;
+    }
+    .home-logo:hover { opacity: 1; }
+    .home-logo img { width: 80px; display: block; }
+
+    /* ── Back button (reveal view) ── */
+    #backBtn {
+      position: fixed;
+      bottom: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
+      font-family: 'Turbine Trial', 'Courier New', monospace;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.4);
+      background: none;
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 8px 20px;
+      cursor: pointer;
+      display: none;
+      transition: color 0.2s, border-color 0.2s;
+      white-space: nowrap;
+    }
+    #backBtn.visible { display: block; }
+    #backBtn:hover { color: #c0e8ff; border-color: rgba(192,232,255,0.3); }
+  </style>
+</head>
+<body>
+
+  <a href="index.html" class="home-logo" id="homeLogo">
+    <img src="materials/logo_white.svg" alt="OB-SCENE" />
+  </a>
+
+  <div class="corner top-left">
+    <span>OB-SCENE</span>
+    <span>遮蔽之景</span>
+  </div>
+  <div class="corner top-right">
+    <span>Online Exhibition</span>
+    <span>Launching 26 April</span>
+  </div>
+  <div class="corner bottom-left" id="cornerBL">
+    <span>Open Submissions</span>
+    <span>All Formats Welcome</span>
+  </div>
+  <div class="corner bottom-right" id="cornerBR">
+    <span>Ongoing Project</span>
+    <span>Link To Be Released</span>
+  </div>
+
+  <!-- Stack view -->
+  <div id="stackView">
+    <div class="stack-wrapper" id="stackWrapper"></div>
+  </div>
+
+  <!-- Reveal view -->
+  <div id="revealView">
+    <div class="stage">
+      <canvas id="revealCanvas"></canvas>
+    </div>
+  </div>
+
+  <button id="backBtn">← Back to Gallery</button>
+
+  <script>
+    const ARTWORKS = [
+      null,
+      { key: 'hito',    src: 'materials/Hito_Steyerl.jpg',  page: 'hito.html' },
+      { key: 'niklas',  src: 'materials/Niklas_Roy.jpg',     page: 'niklas.html' },
+      { key: 'stelarc', src: 'materials/Stelarc.jpg',        page: 'stelarc.html' },
+      { key: 'trevor',  src: 'materials/Trevor_Paglen.jpg',  page: 'trevor.html' },
+      { key: 'xubing',  src: 'materials/Xu_bing.jpg',        page: 'xubing.html' },
+      { key: 'zach',    src: 'materials/Zach_Blas.jpg',      page: 'zachblas.html' },
+      { key: 'zhuzhu',  src: 'materials/zhuzhu.jpg',         page: 'zhuzhu.html' },
+      { key: 'fio',     src: 'materials/fio.jpg',            page: 'fio.html' },
+    ];
+
+    const wrapper     = document.getElementById('stackWrapper');
+    const stackView   = document.getElementById('stackView');
+    const revealView  = document.getElementById('revealView');
+    const canvas      = document.getElementById('revealCanvas');
+    const ctx         = canvas.getContext('2d');
+    const backBtn     = document.getElementById('backBtn');
+    const homeLogo    = document.getElementById('homeLogo');
+    const cornerBL    = document.getElementById('cornerBL');
+    const cornerBR    = document.getElementById('cornerBR');
+
+    const EXPANDED_GAP  = 52;
+    const COLLAPSED_GAP = 6;
+    let expanded = true;
+
+    // ── Reveal engine ──
+    const COLS = 40, ROWS = 24, SHUFFLE_MS = 60;
+    const REVEAL_RATIO_W = 0.45, REVEAL_RATIO_H = 0.45;
+    let revealArt = null;
+    let mouseX = 0, mouseY = 0, curX = 0, curY = 0;
+    let W, H, cellW, cellH, RW, RH;
+    let lastShuffle = 0, flatTiles = [];
+    let rafId = null;
+
+    function resizeCanvas() {
+      const stage = canvas.parentElement;
+      W = canvas.width  = stage.clientWidth;
+      H = canvas.height = stage.clientHeight;
+      cellW = Math.ceil(W / COLS);
+      cellH = Math.ceil(H / ROWS);
+      RW = W * REVEAL_RATIO_W;
+      RH = H * REVEAL_RATIO_H;
+      if (revealArt && revealArt.img) sliceTiles(revealArt);
+    }
+
+    window.addEventListener('resize', () => { if (revealArt) resizeCanvas(); });
+
+    function sliceTiles(a) {
+      a.tiles = []; a.greyTiles = []; flatTiles = [];
+      for (let c = 0; c < COLS; c++) {
+        a.tiles[c] = []; a.greyTiles[c] = [];
+        for (let r = 0; r < ROWS; r++) {
+          const sx = (c / COLS) * a.img.naturalWidth;
+          const sy = (r / ROWS) * a.img.naturalHeight;
+          const sw = a.img.naturalWidth  / COLS;
+          const sh = a.img.naturalHeight / ROWS;
+
+          const oc = document.createElement('canvas');
+          oc.width = cellW; oc.height = cellH;
+          oc.getContext('2d').drawImage(a.img, sx, sy, sw, sh, 0, 0, cellW, cellH);
+          a.tiles[c][r] = oc;
+
+          const og = document.createElement('canvas');
+          og.width = cellW; og.height = cellH;
+          const ogtx = og.getContext('2d');
+          ogtx.filter = 'grayscale(100%) blur(3px)';
+          ogtx.drawImage(a.img, sx, sy, sw, sh, 0, 0, cellW, cellH);
+          a.greyTiles[c][r] = og;
+
+          flatTiles.push([c, r]);
+        }
+      }
+    }
+
+    function shuffleTiles(rl, rr, rt, rb) {
+      const hidden = [];
+      for (let c = 0; c < COLS; c++)
+        for (let r = 0; r < ROWS; r++) {
+          const cx = c * cellW + cellW / 2, cy = r * cellH + cellH / 2;
+          if (!(cx >= rl && cx <= rr && cy >= rt && cy <= rb)) hidden.push([c, r]);
+        }
+      for (let i = hidden.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [hidden[i], hidden[j]] = [hidden[j], hidden[i]];
+      }
+      flatTiles = hidden;
+    }
+
+    function revealLoop(ts) {
+      if (!revealArt || !revealArt.img) { rafId = requestAnimationFrame(revealLoop); return; }
+      curX += (mouseX - curX) * 0.1;
+      curY += (mouseY - curY) * 0.1;
+
+      ctx.fillStyle = '#0e0e0e';
+      ctx.fillRect(0, 0, W, H);
+
+      const rl = curX - RW/2, rr = curX + RW/2;
+      const rt = curY - RH/2, rb = curY + RH/2;
+
+      if (ts - lastShuffle > SHUFFLE_MS) { shuffleTiles(rl, rr, rt, rb); lastShuffle = ts; }
+
+      let hi = 0;
+      for (let c = 0; c < COLS; c++)
+        for (let r = 0; r < ROWS; r++) {
+          const sx = c * cellW, sy = r * cellH;
+          const inside = (sx+cellW/2) >= rl && (sx+cellW/2) <= rr && (sy+cellH/2) >= rt && (sy+cellH/2) <= rb;
+          if (inside) {
+            ctx.drawImage(revealArt.tiles[c][r], sx, sy, cellW, cellH);
+          } else if (hi < flatTiles.length) {
+            const [sc, sr] = flatTiles[hi++];
+            ctx.drawImage(revealArt.greyTiles[sc][sr], sx, sy, cellW, cellH);
+          }
+        }
+
+      rafId = requestAnimationFrame(revealLoop);
+    }
+
+    function openReveal(artObj) {
+      revealArt = artObj;
+      stackView.style.display = 'none';
+      revealView.classList.add('active');
+      backBtn.classList.add('visible');
+      cornerBL.style.display = '';
+      cornerBR.style.display = '';
+      resizeCanvas();
+      curX = mouseX = W / 2;
+      curY = mouseY = H / 2;
+      lastShuffle = 0;
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(revealLoop);
+    }
+
+    function closeReveal() {
+      revealView.classList.remove('active');
+      stackView.style.display = '';
+      backBtn.classList.remove('visible');
+      if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+      revealArt = null;
+      resetCardStates();
+    }
+
+    canvas.addEventListener('mousemove', e => {
+      const rect = canvas.getBoundingClientRect();
+      mouseX = e.clientX - rect.left;
+      mouseY = e.clientY - rect.top;
+    });
+
+    canvas.addEventListener('click', () => {
+      if (!revealArt) return;
+      const cropL = Math.max(0, (curX - RW/2) / W);
+      const cropT = Math.max(0, (curY - RH/2) / H);
+      const cropR = Math.min(1, (curX + RW/2) / W);
+      const cropB = Math.min(1, (curY + RH/2) / H);
+      const params = `?cl=${cropL.toFixed(3)}&ct=${cropT.toFixed(3)}&cr=${cropR.toFixed(3)}&cb=${cropB.toFixed(3)}&from=gallery&key=${revealArt.key}`;
+      window.location.href = revealArt.page + params;
+    });
+
+    backBtn.addEventListener('click', closeReveal);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeReveal(); });
+
+    // ── Build stack cards ──
+    const artObjects = {};
+    const cardStates = []; // track lifted state per card
+
+    ARTWORKS.forEach((item, i) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.style.transform = `translateZ(${-i * EXPANDED_GAP}px)`;
+      card.style.zIndex = ARTWORKS.length - i;
+
+      const state = { lifted: false, card, index: i };
+      cardStates.push(state);
+
+      if (item === null) {
+        card.style.background = '#000';
+        card.style.border = '1px solid rgba(255,255,255,0.08)';
+        card.style.cursor = 'default';
+        card.style.display = 'flex';
+        card.style.alignItems = 'center';
+        card.style.justifyContent = 'center';
+        card.style.fontSize = '60px';
+        card.style.color = 'rgba(255,255,255,0.3)';
+        card.textContent = '♾️';
+      } else {
+        const img = document.createElement('img');
+        img.src = item.src;
+        card.appendChild(img);
+
+        const artObj = { key: item.key, src: item.src, page: item.page, img: null, tiles: [], greyTiles: [] };
+        artObjects[item.key] = artObj;
+        const fullImg = new Image();
+        fullImg.onload = () => { artObj.img = fullImg; };
+        fullImg.src = item.src;
+
+        card.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (!state.lifted) {
+            state.lifted = true;
+            card.style.transform = `translateZ(${-i * EXPANDED_GAP}px) translateY(-30px)`;
+          } else {
+            openReveal(artObj);
+          }
+        });
+      }
+      wrapper.appendChild(card);
+    });
+
+    function resetCardStates() {
+      cardStates.forEach(state => {
+        state.lifted = false;
+        state.card.style.transform = `translateZ(${-state.index * EXPANDED_GAP}px)`;
+      });
+      expanded = true;
+    }
+
+    wrapper.addEventListener('click', () => {
+      expanded = !expanded;
+      document.querySelectorAll('.card').forEach((card, i) => {
+        card.style.transform = `translateZ(${-i * (expanded ? EXPANDED_GAP : COLLAPSED_GAP)}px)`;
+      });
+    });
+
+    // ── Auto-open reveal if returning from detail page ──
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('from') === 'gallery') {
+      const key = params.get('key');
+      // hide stack immediately to avoid flash
+      stackView.style.display = 'none';
+      revealView.classList.add('active');
+      backBtn.classList.add('visible');
+      cornerBL.style.display = '';
+      cornerBR.style.display = '';
+      // wait for image to load then start reveal
+      const tryOpen = setInterval(() => {
+        if (artObjects[key] && artObjects[key].img) {
+          clearInterval(tryOpen);
+          revealArt = artObjects[key];
+          resizeCanvas();
+          curX = mouseX = W / 2;
+          curY = mouseY = H / 2;
+          lastShuffle = 0;
+          if (rafId) cancelAnimationFrame(rafId);
+          rafId = requestAnimationFrame(revealLoop);
+        }
+      }, 20);
+    }
+  </script>
+
+</body>
+</html>
